@@ -2,10 +2,8 @@ import express from "express";
 import { authenticate, authorizeRole } from "../middlewares/authMiddleware.js";
 import { getUsers } from "../controllers/adminUserController.js";
 import User from "../models/userModel.js";
-import jwt from "jsonwebtoken";
 
 const router = express.Router();
-
 
 const verifyAdmin = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -24,57 +22,72 @@ const verifyAdmin = (req, res, next) => {
 };
 
 
+// GET → listar usuarios
 router.get("/users", authenticate, authorizeRole("admin"), getUsers);
 
-// ➕ Crear un nuevo usuario
-  router.post("/", verifyAdmin, async (req, res) => {
-    try {
-      const { firstName, lastName, email, role } = req.body;
-      const existingUser = await User.findOne({ email });
-      if (existingUser) return res.status(400).json({ message: "El usuario ya existe" });
 
-      const newUser = new User({
-        firstName,
-        lastName,
-        email,
-        role: role || "alumno"
-      });
+// POST → crear usuario
 
-      await newUser.save();
-      res.status(201).json({ message: "Usuario creado correctamente", user: newUser });
-    } catch (error) {
-      res.status(500).json({ message: "Error al crear usuario", error });
-    }
-  });
+router.post("/users", verifyAdmin, async (req, res) => {
+  try {
+    const { firstName, lastName, email, role } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "El usuario ya existe" });
 
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      role: role || "alumno",
+      password: "123456", // Si no pides contraseña, coloca temporal
+    });
 
-  router.put("/:id", verifyAdmin, async (req, res) => {
-    try {
-      const { firstName, lastName, email, role } = req.body;
-      const updatedUser = await User.findByIdAndUpdate(
-        req.params.id,
-        { firstName, lastName, email, role },
-        { new: true }
-      );
-      if (!updatedUser) return res.status(404).json({ message: "Usuario no encontrado" });
+    await newUser.save();
 
-        res.status(200).json({ message: "Usuario actualizado correctamente", user: updatedUser });
-      } catch (error) {
-        res.status(500).json({ message: "Error al actualizar usuario", error });
-      }
-  });
+    res.status(201).json({
+      message: "Usuario creado correctamente",
+      user: newUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error al crear usuario", error });
+  }
+});
 
+// PUT → actualizar usuario
+router.put("/users/:id", verifyAdmin, async (req, res) => {
+  try {
+    const { firstName, lastName, email, role } = req.body;
 
-  router.delete("/:id", verifyAdmin, async (req, res) => {
-    try {
-      const deletedUser = await User.findByIdAndDelete(req.params.id);
-      if (!deletedUser) return res.status(404).json({ message: "Usuario no encontrado" });
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { firstName, lastName, email, role },
+      { new: true }
+    );
 
-      res.status(200).json({ message: "Usuario eliminado correctamente" });
-    } catch (error) {
-      res.status(500).json({ message: "Error al eliminar usuario", error });
-    }
-  });
+    if (!updatedUser)
+      return res.status(404).json({ message: "Usuario no encontrado" });
+
+    res.status(200).json({
+      message: "Usuario actualizado correctamente",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error al actualizar usuario", error });
+  }
+});
+
+// DELETE → eliminar usuario
+router.delete("/users/:id", verifyAdmin, async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    if (!deletedUser)
+      return res.status(404).json({ message: "Usuario no encontrado" });
+
+    res.status(200).json({ message: "Usuario eliminado correctamente" });
+  } catch (error) {
+    res.status(500).json({ message: "Error al eliminar usuario", error });
+  }
+});
 
 export default router;
-

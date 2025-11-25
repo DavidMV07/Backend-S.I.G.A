@@ -55,12 +55,12 @@ const AuthController = {
       // Devolver información básica del usuario junto con el token
       res.status(200).json({
         token,
-        role: user.role,
         user: {
           id: user._id,
           email: user.email,
           firstName: user.firstName || null,
           lastName: user.lastName || null,
+          role: user.role,
         },
         message: "Inicio de sesión exitoso",
       });
