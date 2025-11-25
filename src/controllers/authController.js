@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 const AuthController = {
 
   register: async (req, res) => {
-    const { email, password, role } = req.body;
+    const { email, password, role, firstName, lastName } = req.body;
 
     try {
       const existingUser = await User.findOne({ email });
@@ -15,6 +15,8 @@ const AuthController = {
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = new User({
+        firstName: firstName || null,
+        lastName: lastName || null,
         email,
         password: hashedPassword,
         role: role || "alumno",
@@ -41,15 +43,25 @@ const AuthController = {
         return res.status(401).json({ message: "Contraseña incorrecta" });
       }
 
-      const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
+      if (!process.env.JWT_SECRET) {
+        console.error('JWT_SECRET no definido en las variables de entorno');
+        return res.status(500).json({ message: 'Error de configuración del servidor' });
+      }
 
+      const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+
+      // Devolver información básica del usuario junto con el token
       res.status(200).json({
         token,
         role: user.role,
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName || null,
+          lastName: user.lastName || null,
+        },
         message: "Inicio de sesión exitoso",
       });
     } catch (error) {
