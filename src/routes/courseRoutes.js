@@ -21,8 +21,8 @@ router.delete('/:id/profesor/:profesorId', authenticate, authorizeRole('admin'),
 // ========================
 // Admin: Students
 // ========================
-router.post('/:id/alumnos', authenticate, authorizeRole('admin'), courseController.enrollStudent);
-router.delete('/:id/alumnos/:alumnoId', authenticate, authorizeRole('admin'), courseController.removeStudent);
+router.post('/:id/alumno', authenticate, authorizeRole('admin'), courseController.enrollStudent);
+router.delete('/:id/alumno/:alumnoId', authenticate, authorizeRole('admin'), courseController.removeStudent);
 
 // ========================
 // Admin: Prerequisites

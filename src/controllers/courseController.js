@@ -234,7 +234,33 @@ const courseController = {
     } catch (error) {
       res.status(500).json({ message: 'Error fetching eligible courses', error });
     }
-  }
+  },
+  removeStudent: async (req, res) => {
+    try {
+      const { id, alumnoId } = req.params;
+
+      const course = await Course.findById(id);
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      // si no estaba matriculado
+      if (!course.alumno.includes(alumnoId)) {
+        return res.status(400).json({ message: 'Student not enrolled' });
+      }
+
+      course.alumno = course.alumno.filter(a => a.toString() !== alumnoId);
+      await course.save();
+
+      res.json({
+        message: 'Student removed from course',
+        courseId: id,
+        alumnoId
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Error removing student', error });
+    }
+  },
 };
 
 export default courseController;
