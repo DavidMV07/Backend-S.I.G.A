@@ -2,14 +2,21 @@
 import express from "express";
 import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes.js";
-import { config } from "dotenv";
+import dotenv from "dotenv";
 import cors from "cors";
 import userRoutes from "./routes/userRoutes.js";
 import adminUserRoutes from "./routes/adminUserRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import enrollmentRoutes from "./routes/enrollmentRoutes.js";
+import fs from "fs";
 
-config();
+
+dotenv.config({path: './.env'});
+
+console.log("MONGODB_URI LOADED:", process.env.MONGODB_URI);
+console.log("JWT_SECRET LOADED:", process.env.JWT_SECRET);
+console.log("EXISTS .env:", fs.existsSync("./.env"));
+console.log("CWD:", process.cwd());
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,7 +41,7 @@ mongoose
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/admin", adminUserRoutes);
+app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 

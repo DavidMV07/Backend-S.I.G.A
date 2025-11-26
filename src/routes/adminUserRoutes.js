@@ -2,12 +2,14 @@ import express from "express";
 import { authenticate, authorizeRole } from "../middlewares/authMiddleware.js";
 import { getUsers } from "../controllers/adminUserController.js";
 import User from "../models/userModel.js";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
 const verifyAdmin = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Token no proporcionado" });
+  if (!token)
+    return res.status(401).json({ message: "Token no proporcionado" });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -21,14 +23,12 @@ const verifyAdmin = (req, res, next) => {
   }
 };
 
-
 // GET → listar usuarios
-router.get("/users", authenticate, authorizeRole("admin"), getUsers);
-
+router.get("/", authenticate, authorizeRole("admin"), getUsers);
 
 // POST → crear usuario
 
-router.post("/users", verifyAdmin, async (req, res) => {
+router.post("/", verifyAdmin, async (req, res) => {
   try {
     const { firstName, lastName, email, role } = req.body;
     const existingUser = await User.findOne({ email });
@@ -55,7 +55,7 @@ router.post("/users", verifyAdmin, async (req, res) => {
 });
 
 // PUT → actualizar usuario
-router.put("/users/:id", verifyAdmin, async (req, res) => {
+router.put("/:id", verifyAdmin, async (req, res) => {
   try {
     const { firstName, lastName, email, role } = req.body;
 
@@ -78,7 +78,7 @@ router.put("/users/:id", verifyAdmin, async (req, res) => {
 });
 
 // DELETE → eliminar usuario
-router.delete("/users/:id", verifyAdmin, async (req, res) => {
+router.delete("/:id", verifyAdmin, async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
     if (!deletedUser)
