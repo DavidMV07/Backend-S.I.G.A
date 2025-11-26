@@ -38,7 +38,6 @@ mongoose
 
 
   app.use("/api/auth", authRoutes);
-  app.use("/api/user", adminUserRoutes);
   app.use("/api/admin/users", adminUserRoutes);
   app.use("/api/courses", courseRoutes);
   app.use("/api/enrollments", enrollmentRoutes);
