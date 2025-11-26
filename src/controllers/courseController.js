@@ -83,8 +83,8 @@ const courseController = {
       const course = await Course.findById(req.params.id);
       if (!course) return res.status(404).json({ message: 'Course not found' });
 
-      const teacher = await User.findById(profesorId);
-      if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
+      const profesor = await User.findById(profesorId);
+      if (!profesor) return res.status(404).json({ message: 'Teacher not found' });
 
       if (course.profesor.includes(profesorId))
         return res.status(400).json({ message: 'Teacher already assigned' });
@@ -101,24 +101,45 @@ const courseController = {
   },
 
 
-  removeTeacher: async (req, res) => {
-    try {
-      const { teacherId } = req.params;
+removeTeacher: async (req, res) => {
+  try {
+    const { id, profesorId } = req.params;
 
-      const course = await Course.findById(req.params.id);
-      if (!course) return res.status(404).json({ message: 'Course not found' });
-
-      course.profesor = course.profesor.filter(t => t.toString() !== profesorId);
-      await course.save();
-
-      const populated = await Course.findById(course._id)
-        .populate('profesor', 'firstName lastName email role');
-
-      res.json({ message: 'Teacher removed', course: populated });
-    } catch (error) {
-      res.status(500).json({ message: 'Error removing teacher', error });
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
     }
-  },
+
+    // Validar que profesorId exista en el array
+    const exists = course.profesor.some(
+      p => p && p.toString() === profesorId
+    );
+
+    if (!exists) {
+      return res.status(400).json({ message: 'Teacher not assigned to this course' });
+    }
+
+    // Filtrar evitando nulos o IDs corruptos
+    course.profesor = course.profesor.filter(
+      p => p && p.toString() !== profesorId
+    );
+
+    await course.save();
+
+    const populated = await Course.findById(id)
+      .populate('profesor', 'firstName lastName email role');
+
+    res.json({
+      message: 'Teacher removed',
+      course: populated
+    });
+
+  } catch (error) {
+    console.error("REMOVE TEACHER ERROR:", error);
+    res.status(500).json({ message: 'Error removing teacher', error });
+  }
+},
+
 
 
   addPrerequisite: async (req, res) => {
