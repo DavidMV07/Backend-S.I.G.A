@@ -7,9 +7,9 @@ const courseSchema = new mongoose.Schema({
   description: { type: String },
 
   // Profesores asignados
-  teachers: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User' 
+  profesor: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }],
 
   // 🔥 Prerrequisitos

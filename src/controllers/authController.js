@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 const AuthController = {
 
   register: async (req, res) => {
-    const { email, password, role, firstName, lastName } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
 
     try {
       const existingUser = await User.findOne({ email });

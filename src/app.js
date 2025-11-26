@@ -1,4 +1,3 @@
-
 import express from "express";
 import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes.js";
@@ -39,12 +38,12 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/admin/users", adminUserRoutes);
-app.use("/api/courses", courseRoutes);
-app.use("/api/enrollments", enrollmentRoutes);
+  app.use("/api/auth", authRoutes);
+  app.use("/api/users", userRoutes);
+  app.use("/api/admin/users", adminUserRoutes);
+  app.use("/api/courses", courseRoutes);
+  app.use("/api/enrollments", enrollmentRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });

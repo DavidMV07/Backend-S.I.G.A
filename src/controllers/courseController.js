@@ -2,9 +2,8 @@ import Course from '../models/courseModel.js';
 import User from '../models/userModel.js';
 
 const courseController = {
-  // -------------------------------
-  // CREATE
-  // -------------------------------
+
+
   createCourse: async (req, res) => {
     try {
       const { title, code, description } = req.body;
@@ -18,15 +17,13 @@ const courseController = {
     }
   },
 
-  // -------------------------------
-  // GET ALL
-  // -------------------------------
+
   getCourses: async (req, res) => {
     try {
       const courses = await Course.find()
-        .populate('teachers', 'firstName lastName email role')
+        .populate('profesor', 'firstName lastName email role')
         .populate('prerequisites', 'title code')
-        .populate('students', 'firstName lastName email');
+        .populate('alumno', 'firstName lastName email');
 
       res.json(courses);
     } catch (error) {
@@ -34,15 +31,13 @@ const courseController = {
     }
   },
 
-  // -------------------------------
-  // GET BY ID
-  // -------------------------------
+
   getCourseById: async (req, res) => {
     try {
       const course = await Course.findById(req.params.id)
-        .populate('teachers', 'firstName lastName email role')
+        .populate('profesor', 'firstName lastName email role')
         .populate('prerequisites', 'title code')
-        .populate('students', 'firstName lastName email');
+        .populate('alumno', 'firstName lastName email');
 
       if (!course) return res.status(404).json({ message: 'Course not found' });
 
@@ -52,9 +47,7 @@ const courseController = {
     }
   },
 
-  // -------------------------------
-  // UPDATE
-  // -------------------------------
+
   updateCourse: async (req, res) => {
     try {
       const updated = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -66,50 +59,48 @@ const courseController = {
     }
   },
 
-  // -------------------------------
-  // DELETE
-  // -------------------------------
+
   deleteCourse: async (req, res) => {
     try {
-      const deleted = await Course.findByIdAndDelete(req.params.id);
-      if (!deleted) return res.status(404).json({ message: 'Course not found' });
+      const { id } = req.params;
+      const course = await Course.findByIdAndDelete(id);
 
-      res.json({ message: 'Course deleted' });
+      if (!course) {
+        return res.status(404).json({ msg: "Curso no encontrado" });
+      }
+
+      res.json({ msg: "Curso eliminado correctamente" });
     } catch (error) {
-      res.status(500).json({ message: 'Error deleting course', error });
+      console.error(error);
+      res.status(500).json({ msg: "Error al eliminar curso" });
     }
   },
 
-  // -------------------------------
-  // ADD TEACHER
-  // -------------------------------
+
   addTeacher: async (req, res) => {
     try {
-      const { teacherId } = req.body;
+      const { profesorId } = req.body;
       const course = await Course.findById(req.params.id);
       if (!course) return res.status(404).json({ message: 'Course not found' });
 
-      const teacher = await User.findById(teacherId);
+      const teacher = await User.findById(profesorId);
       if (!teacher) return res.status(404).json({ message: 'Teacher not found' });
 
-      if (course.teachers.includes(teacherId))
+      if (course.profesor.includes(profesorId))
         return res.status(400).json({ message: 'Teacher already assigned' });
 
-      course.teachers.push(teacherId);
+      course.profesor.push(profesorId);
       await course.save();
 
       const populated = await Course.findById(course._id)
-        .populate('teachers', 'firstName lastName email role');
-
+        .populate('profesor', 'firstName lastName email role');
       res.json({ message: 'Teacher added', course: populated });
     } catch (error) {
       res.status(500).json({ message: 'Error adding teacher', error });
     }
   },
 
-  // -------------------------------
-  // REMOVE TEACHER
-  // -------------------------------
+
   removeTeacher: async (req, res) => {
     try {
       const { teacherId } = req.params;
@@ -117,11 +108,11 @@ const courseController = {
       const course = await Course.findById(req.params.id);
       if (!course) return res.status(404).json({ message: 'Course not found' });
 
-      course.teachers = course.teachers.filter(t => t.toString() !== teacherId);
+      course.profesor = course.profesor.filter(t => t.toString() !== profesorId);
       await course.save();
 
       const populated = await Course.findById(course._id)
-        .populate('teachers', 'firstName lastName email role');
+        .populate('profesor', 'firstName lastName email role');
 
       res.json({ message: 'Teacher removed', course: populated });
     } catch (error) {
@@ -129,9 +120,7 @@ const courseController = {
     }
   },
 
-  // -------------------------------
-  // ADD PREREQUISITE
-  // -------------------------------
+
   addPrerequisite: async (req, res) => {
     try {
       const { prereqId } = req.body;
@@ -160,9 +149,6 @@ const courseController = {
     }
   },
 
-  // -------------------------------
-  // REMOVE PREREQUISITE
-  // -------------------------------
   removePrerequisite: async (req, res) => {
     try {
       const { prereqId } = req.params;
@@ -184,26 +170,23 @@ const courseController = {
     }
   },
 
-  // -------------------------------
-  // ENROLL STUDENT WITH PREREQ VALIDATION
-  // -------------------------------
+
   enrollStudent: async (req, res) => {
     try {
-      const { studentId } = req.body;
+      const { alumnoId } = req.body;
 
       const course = await Course.findById(req.params.id).populate('prerequisites');
       if (!course) return res.status(404).json({ message: 'Course not found' });
 
-      const student = await User.findById(studentId);
-      if (!student) return res.status(404).json({ message: 'Student not found' });
+      const alumno = await User.findById(alumnoId);
+      if (!alumno) return res.status(404).json({ message: 'Student not found' });
 
       // verificar si ya está matriculado
-      if (course.students.includes(studentId))
+      if (course.alumno.includes(alumnoId))
         return res.status(400).json({ message: 'Student already enrolled' });
 
       // validar prerrequisitos
-      const completedCourses = student.completedCourses || []; // debes tener esto en tu UserModel
-
+      const completedCourses = alumno.completedCourses || [];
       const missing = course.prerequisites.filter(
         p => !completedCourses.includes(p._id.toString())
       );
@@ -216,30 +199,28 @@ const courseController = {
       }
 
       // matricular
-      course.students.push(studentId);
+      course.alumno.push(alumnoId);
       await course.save();
 
       res.json({
         message: 'Student enrolled successfully',
         courseId: course._id,
-        studentId
+        alumnoId
       });
     } catch (error) {
       res.status(500).json({ message: 'Error enrolling student', error });
     }
   },
 
-  // -------------------------------
-  // GET COURSES AVAILABLE FOR STUDENT
-  // -------------------------------
+
   getEligibleCourses: async (req, res) => {
     try {
-      const studentId = req.params.studentId;
-      const student = await User.findById(studentId);
+      const alumnoId = req.params.alumnoId;
+      const alumno = await User.findById(alumnoId);
 
-      if (!student) return res.status(404).json({ message: 'Student not found' });
+      if (!alumno) return res.status(404).json({ message: 'Student not found' });
 
-      const completed = student.completedCourses || [];
+      const completed = alumno.completedCourses || [];
 
       const allCourses = await Course.find().populate('prerequisites');
 
