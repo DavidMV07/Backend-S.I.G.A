@@ -8,6 +8,6 @@ router.post('/', authenticate, enroll);
 router.get('/me', authenticate, getMyEnrollments);
 router.get('/course/:courseId', authenticate, getEnrollmentsByCourse);
 router.delete('/:id', authenticate, unenroll);
-router.put('/:id/grades', authenticate, updateGrades); // teachers or admin
+router.put('/:id/grades', authenticate, updateGrades);
 
 export default router;
